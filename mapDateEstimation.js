@@ -52,14 +52,18 @@ function updateRange(choice) {
             }
             break;
         case 'no':
+            // If there is both an upper and lower limit it is unknown which side to choose => do nothing
+            if (currentQuestion.upper != "" && currentQuestion.lower != "") {
+                break;
+            }
             // If the question does not have an upper range that means it is true to this present day
             // That means the range is within the time of the question.
-            if (currentQuestion.upper != "" && range.upper > currentQuestion.lower) {
+            if (currentQuestion.upper == "" && range.upper > currentQuestion.lower) {
                 range.upper = currentQuestion.lower;
             }
             // If the question does not have a lower range that means it was true before 1900 but is no more
             // That means the range is within the time of the question
-            if (currentQuestion.lower != "" && range.lower < currentQuestion.upper) {
+            if (currentQuestion.lower == "" && range.lower < currentQuestion.upper) {
                 range.lower = currentQuestion.upper;
             }
             break;
