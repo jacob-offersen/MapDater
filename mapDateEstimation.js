@@ -9,7 +9,7 @@ const estimatedYearElementId = 'estimatedYears'
 
 var range = {
     "upper": new Date().getFullYear(),
-    "lower": 1900
+    "lower": 1850
 };
 
 var currentQuestion;
