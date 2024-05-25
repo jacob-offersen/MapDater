@@ -3,8 +3,6 @@
 
 const gQuestionStrBeginning = "Question: ";
 const gEstimatedYearStrBeginning = "Estimated Range: ";
-
-const questionElementId = 'question'
 const estimatedYearElementId = 'estimatedYears'
 
 var range = {
@@ -19,7 +17,6 @@ var moreQuestion = {};
 
 function pageLoaded() {
     loadRegions();
-    
     outputCurrentEstimate();
 }
 
@@ -104,8 +101,7 @@ function updateRange(region, choice) {
 
 function getCurrentQuestion(region)
 {
-    const question = currentQuestions[region]; 
-    return question;
+    return currentQuestions[region]; 
 }
 
 function getNextQuestion(region) {
@@ -166,10 +162,10 @@ function finishEstimation(region)
 {
     estimationFinished[region] = true;
 }
+
 function isEstimationFinished(region)
 {
-    const finished = estimationFinished[region];
-    return finished;
+    return estimationFinished[region];
 }
 
 function outputCurrentEstimate() {
@@ -182,13 +178,12 @@ function writeToEstimateField(string) {
 }
 
 function writeToQuestionField(region, string) {
-    let questionElementId = null;
     regions.forEach((regionElement) => {
         if(region == regionElement.region)
             {
-                questionElementId = regionElement.questionElementId;
+                const questionOutput = document.getElementById(regionElement.questionElementId);
+                questionOutput.textContent = string;
+                return;
             }
     });
-    const questionOutput = document.getElementById(questionElementId);
-    questionOutput.textContent = string;
 }
