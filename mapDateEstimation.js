@@ -12,32 +12,45 @@ var range = {
     "lower": 1850
 };
 
-var currentQuestion;
-var currentQuestionIndex;
-var estimationFinished;
-var noMoreQuestion;
+var currentQuestions = {};
+var currentQuestionIndex = {};
+var estimationFinished = {};
+var moreQuestion = {};
 
 function pageLoaded() {
-    currentQuestionIndex = -1;
-    estimationFinished = false;
-    noMoreQuestion = false;
-    outputNextQuestion();
+    loadRegions();
+    
     outputCurrentEstimate();
 }
 
-function handleButtonClick(choice) {
+function loadRegions()
+{
+    questions.forEach((regionQuestions) => {
+        const region = regionQuestions.region;
+        // Create HTML elements for region
+        createRegion(region);
+        // Initialize question index and status
+        currentQuestionIndex[region] = -1;
+        estimationFinished[region] = false;
+        moreQuestion[region] = true;
+        outputNextQuestion(region);
+    });
+}
+
+function handleButtonClick(region, choice) {
     // Update and display new estimated range
-    if (estimationFinished == false) {
-        updateRange(choice);
+    if (isEstimationFinished(region) == false) {
+        updateRange(region, choice);
     }
 
     // Fetch and display next question
-    if (estimationFinished == false) {
-        outputNextQuestion();
+    if (isEstimationFinished(region) == false) {
+        outputNextQuestion(region);
     }
 }
 
-function updateRange(choice) {
+function updateRange(region, choice) {
+    const currentQuestion = getCurrentQuestion(region);
     // The goal of this estimate is to lower the upper limit as much as possible 
     // and increase the lower limit as mich as possible. This will reduce the range as much as possible.
     switch (choice) {
@@ -75,48 +88,88 @@ function updateRange(choice) {
 
     if (range.lower > range.upper) {
         // If the upper limit is lower than the lower limit, something is wrong. End the estimation
-        writeToQuestionField("Invalid range. Restart the date estimation.");
-        estimationFinished = true;
+        writeToQuestionField(region, "Invalid range. Restart the date estimation.");
+        finishEstimation(region);
 
     } else if (range.lower == range.upper) {
         // If the limits are the same the range as reached a single year. End the estimation
         writeToEstimateField(range.lower);
-        estimationFinished = true;
+        finishEstimation(region);
+
     } else {
         // The estimation can be improved keep going
         outputCurrentEstimate();
     }
 }
 
-function getNextQuestion() {
-    question = []
-    currentQuestionIndex = currentQuestionIndex + 1;
-    if (currentQuestionIndex != questions.length) {
+function getCurrentQuestion(region)
+{
+    const question = currentQuestions[region]; 
+    return question;
+}
+
+function getNextQuestion(region) {
+    let question = []
+    currentQuestionIndex[region] = currentQuestionIndex[region] + 1;
+    const regionQuestions = getQuestionsForRegion(region);
+    if (currentQuestionIndex[region] != regionQuestions.length) {
         // Extract the new question
-        question = questions[currentQuestionIndex]
+        question = regionQuestions[currentQuestionIndex[region]];
     } else {
         // There are no more questions
-        noMoreQuestion = true;
+        setNoMoreQuestions(region);
     }
     return question;
 }
 
-function outputNextQuestion() {
+function getQuestionsForRegion(region)
+{
+    let returnQuestions;
+    questions.forEach((regionQuestions) => {
+        if(region == regionQuestions.region)
+            {
+                returnQuestions = regionQuestions.questions;
+            }
+    });
+    return returnQuestions;
+}
+
+function outputNextQuestion(region) {
     // Get next question
-    const question = getNextQuestion();
-    currentQuestion = {
+    const question = getNextQuestion(region);
+    currentQuestions[region] = {
         question: question[questionIndex],
         lower: question[lowerIndex],
         upper: question[upperIndex]
     };
-    if (false == noMoreQuestion) {
+    if (isMoreQuestionsAvailable(region)) {
         // Display new question
-        writeToQuestionField(gQuestionStrBeginning + currentQuestion.question);
+        writeToQuestionField(region, gQuestionStrBeginning + currentQuestions[region].question);
     } else {
         // There are no more questions to ask. The estimation cannot be further improved. End the estimation.
-        writeToQuestionField("No more questions. Estimation cannot be improved.");
-        estimationFinished = true;
+        writeToQuestionField(region, "No more questions.");
+        finishEstimation(region);
     }
+}
+
+function setNoMoreQuestions(region)
+{
+    moreQuestion[region] = false;
+}
+
+function isMoreQuestionsAvailable(region)
+{
+    return moreQuestion[region];
+}
+
+function finishEstimation(region)
+{
+    estimationFinished[region] = true;
+}
+function isEstimationFinished(region)
+{
+    const finished = estimationFinished[region];
+    return finished;
 }
 
 function outputCurrentEstimate() {
@@ -128,7 +181,14 @@ function writeToEstimateField(string) {
     estimatedYearsOutput.textContent = string
 }
 
-function writeToQuestionField(string) {
+function writeToQuestionField(region, string) {
+    let questionElementId = null;
+    regions.forEach((regionElement) => {
+        if(region == regionElement.region)
+            {
+                questionElementId = regionElement.questionElementId;
+            }
+    });
     const questionOutput = document.getElementById(questionElementId);
     questionOutput.textContent = string;
 }
